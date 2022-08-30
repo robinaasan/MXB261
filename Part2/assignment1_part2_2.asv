@@ -1,0 +1,89 @@
+%% First part
+size = 20; %number of bins
+Data0 = importdata('sample2022.txt');
+
+figure
+subplot(1, 2, 1);
+histogram(Data0, size);
+set(gca,'FontSize',18)
+
+%%
+cdf_hist = histogram(Data0, 20,'normalization', 'probability');
+%sum(cdf_hist.Values); 
+
+bins_place = (1:size);
+bin_value = cdf_hist.Values;
+subplot(1, 2, 2)
+bar(bins_place, bin_value);
+
+%calculating the cumulative sum
+cum = cumsum(bin_value);
+
+figure 
+bar(bins_place, cum);
+xlabel('bin number');
+ylabel('Cumulative probability');
+set(gca,'FontSize',18)
+
+%% making lines from histogram
+
+%when x < 1,  
+Fx_0 = @(x) 0.*x;
+
+figure
+bar(bins_place, cum)
+hold on
+xvec_0 = linspace(0,1,size);
+plot(xvec_0,Fx_0(xvec_0),'LineWidth',2)
+for i = 1:size-1
+    if (i == 1)
+        Fx_1 = @(x) (cum(1)-0)/(2-1).*(x-1)+0;%equation for the line joining CDFs q0, q1
+        xvec_0 = linspace(1,2,size);
+        plot(xvec_0,Fx_1(xvec_0),'LineWidth',2)
+        continue
+    end
+    Fx_rest = @(x) (cum(i+1)-cum(i))/(i+1-i).*(x-i)+cum(i);%equation for the line joining CDFs q0, q1
+    xvec_0 = linspace(i,i+1,size);
+    plot(xvec_0,Fx_rest(xvec_0),'LineWidth',2)
+end
+
+
+%% Sampling part
+samples = 1000;
+sample_CDF_continuous = zeros(samples, 1);
+rng(10);
+
+sampling_list = zeros(1, size);
+for s = 1:samples
+    for y = 1:size
+       u = rand;
+       if u<=cum(y)
+            x1 = y; % set x1 = left RV
+            x2 = y+1; % set x2 = right RV
+            y1 = y-1; % set y1 = left CDF value
+            y2 = cum(y); %set y2 = right CDF value
+            break
+       elseif u>cum(y)
+            
+       end
+    end
+    sample_CDF_continuous(s) = (u-y1)*(x2-x1)/(y2-y1)+x1;
+end
+
+
+figure
+
+% first plotting the experiment data bins against the sampled bins
+%second plotting the sampled values vs the experiment data
+%subplot(1,2,2)
+histogram(sample_CDF_continuous,'Normalization','pdf')
+
+% histogram(Data0,'Normalization','probability')
+% xlabel('Time to division d')
+% ylabel('Frequence in N samples')
+% set(gca,'FontSize',18);
+% legend('Sampled RV','Experimental data')
+
+
+
+
